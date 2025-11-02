@@ -1,4 +1,4 @@
-# 🩺 PhysioNet Challenge 2019 - Training Set B (Early Prediction of Sepsis)
+# 🩺 PhysioNet Challenge 2019 - Early Prediction of Sepsis (Training Set B)
 
 This repository focuses on **Training Set B** from the [PhysioNet/Computing in Cardiology Challenge 2019: Early Prediction of Sepsis](https://physionet.org/content/challenge-2019/1.0.0/).  
 The goal of this challenge is to develop algorithms that can **detect sepsis early** from ICU time-series data.
@@ -8,7 +8,7 @@ The goal of this challenge is to develop algorithms that can **detect sepsis ear
 ## 📘 About the Dataset
 
 The dataset consists of **multivariate clinical time series** data collected from Intensive Care Unit (ICU) patients.  
-Each patient’s data is stored in a separate `.psv` file, where rows represent hourly measurements and columns represent clinical features and outcomes.
+Each patient’s data is stored in a separate `.psv` file, where rows represent **hourly measurements** and columns represent clinical features and outcomes.
 
 This project uses **only Training Set B**, which contains thousands of patient records.
 
@@ -16,11 +16,10 @@ This project uses **only Training Set B**, which contains thousands of patient r
 
 ## 📊 Data Description
 
-Each `.psv` file includes **40 input variables** and **1 output label**, as summarized below.
-
 ### 🫀 Vital Signs (Columns 1–8)
+
 | Column | Description | Unit |
-|---------|--------------|------|
+|--------|------------|------|
 | HR | Heart rate | beats per minute |
 | O2Sat | Pulse oximetry | % |
 | Temp | Temperature | °C |
@@ -30,11 +29,10 @@ Each `.psv` file includes **40 input variables** and **1 output label**, as summ
 | Resp | Respiration rate | breaths per minute |
 | EtCO2 | End tidal carbon dioxide | mm Hg |
 
----
-
 ### 🧪 Laboratory Values (Columns 9–34)
+
 | Column | Description | Unit |
-|---------|--------------|------|
+|--------|------------|------|
 | BaseExcess | Measure of excess bicarbonate | mmol/L |
 | HCO3 | Bicarbonate | mmol/L |
 | FiO2 | Fraction of inspired oxygen | % |
@@ -62,11 +60,10 @@ Each `.psv` file includes **40 input variables** and **1 output label**, as summ
 | Fibrinogen | Fibrinogen | mg/dL |
 | Platelets | Platelet count | ×10³/µL |
 
----
-
 ### 👤 Demographics (Columns 35–40)
+
 | Column | Description |
-|---------|--------------|
+|--------|------------|
 | Age | Patient age (100 = 90 or older) |
 | Gender | Female = 0, Male = 1 |
 | Unit1 | ICU type indicator (MICU) |
@@ -74,11 +71,10 @@ Each `.psv` file includes **40 input variables** and **1 output label**, as summ
 | HospAdmTime | Hours between hospital and ICU admission |
 | ICULOS | ICU length-of-stay (hours since ICU admit) |
 
----
-
 ### 🚨 Outcome (Column 41)
+
 | Column | Description |
-|---------|--------------|
+|--------|------------|
 | SepsisLabel | Binary label (1 = sepsis, 0 = non-sepsis). For sepsis patients, label switches from 0 → 1 at least 6 hours before clinical sepsis onset. |
 
 ---
@@ -86,6 +82,61 @@ Each `.psv` file includes **40 input variables** and **1 output label**, as summ
 ## 🧹 Project Workflow
 
 ### 1. Data Download
-Downloaded `.psv` files directly from PhysioNet using `wget`, with resume support:
+
+Download `.psv` files directly from PhysioNet using `wget` with resume support:
+
 ```bash
 wget -c "https://physionet.org/files/challenge-2019/1.0.0/training/training_setB/"
+---
+
+## 🧹 Project Workflow
+
+### 2. Data Preprocessing
+
+- Merge `.psv` files into a single DataFrame for analysis.
+- Handle missing values using forward-fill/backward-fill or mean imputation.
+- Separate features (`X`) and target (`SepsisLabel`).
+- Standardize features using `StandardScaler`.
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+---
+
+### 3. Train-Test Split
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+---
+
+### 4. Handling Class Imbalance
+
+Use **SMOTE (Synthetic Minority Oversampling Technique)** to balance the training data:
+
+```python
+from imblearn.over_sampling import SMOTE
+
+smote = SMOTE(random_state=42)
+X_train_resampled, y_train_resampled = smote.fit_resample(X_train_scaled, y_train)
+---
+
+### 5. Model Training
+
+#### Random Forest Example
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+rf_model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+rf_model.fit(X_train_resampled, y_train_resampled)
