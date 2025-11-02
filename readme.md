@@ -88,4 +88,4 @@ Each `.psv` file includes **40 input variables** and **1 output label**, as summ
 ### 1. Data Download
 Downloaded `.psv` files directly from PhysioNet using `wget`, with resume support:
 ```bash
-wget -c "https://physionet.org/files/challenge-2019/1.0.0/training/training_setB/pXXXXXX.psv"
+wget -c "https://physionet.org/files/challenge-2019/1.0.0/training/training_setB/"
